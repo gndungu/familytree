@@ -1,0 +1,72 @@
+# ======================
+# Python
+# ======================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+.Python
+env/
+venv/
+ENV/
+.env/
+
+# ======================
+# Django
+# ======================
+*.log
+db.sqlite3
+media/
+staticfiles/
+static/
+*.pot
+*.pyc
+
+# local settings
+local_settings.py
+
+# migrations (optional - remove if you track them)
+# */migrations/*.py
+# !*/migrations/__init__.py
+
+# ======================
+# PostgreSQL backups
+# ======================
+*.dump
+*.sql
+*.backup
+
+# ======================
+# IDEs
+# ======================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ======================
+# OS files
+# ======================
+.DS_Store
+Thumbs.db
+
+# ======================
+# Django secret
+# ======================
+.env
+.env.*
+
+# ======================
+# Celery
+# ======================
+celerybeat-schedule
+
+# ======================
+# Coverage / tests
+# ======================
+htmlcov/
+.coverage
+coverage.xml
+.pytest_cache/
