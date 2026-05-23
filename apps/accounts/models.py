@@ -43,8 +43,7 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(
     AbstractBaseUser,
-    PermissionsMixin,
-    TimeStampMixin
+    PermissionsMixin
 ):
 
     ROLE_CHOICES = (
