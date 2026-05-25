@@ -11,22 +11,22 @@ export default function GalleryCard({
   darkMode,
   onClick,
 }: Props) {
-  console.log(item)
+  
   return (
     <div
       onClick={onClick}
-      className={`group overflow-hidden rounded-3xl border cursor-pointer transition-all duration-300 hover:scale-[1.02] ${
+      className={`group overflow-hidden rounded-lg border cursor-pointer transition-all duration-300 hover:scale-[1.02] ${
         darkMode
           ? 'bg-slate-900/60 border-white/10'
           : 'bg-white border-slate-200'
       }`}
     >
       <div className="relative overflow-hidden">
-
+        
         <img
-          src={item.image}
+          src={item.image_url}
           alt={item.title}
-          className="w-full h-72 object-cover transition duration-500 group-hover:scale-105"
+          className="w-full h-32 object-cover transition duration-500 group-hover:scale-105"
         />
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />

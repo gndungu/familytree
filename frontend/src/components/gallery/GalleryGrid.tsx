@@ -13,7 +13,7 @@ export default function GalleryGrid({
   onSelect,
 }: Props) {
   return (
-    <div className="columns-1 sm:columns-2 lg:columns-3 gap-5 space-y-5">
+    <div className="s:column-1 columns-2 sm:columns-2 md:columns-3 lg:columns-5 gap-5 space-y-5">
 
       {items.map((item) => (
         <GalleryCard

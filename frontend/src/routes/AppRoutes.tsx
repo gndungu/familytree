@@ -10,6 +10,7 @@ import SearchMembers from "../pages/SearchMembers.tsx";
 import MemberDetail from "../pages/MemberDetail.tsx";
 import FamilyTreePage from "../pages/FamilyTreePage.tsx";
 import GalleryPage from "../pages/GalleryPage.tsx";
+import AlbumsPage from "../pages/AlbumsPage.tsx";
 
 export default function AppRoutes() {
   return (
@@ -71,6 +72,22 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute>
             <GalleryPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/gallery/:id"
+        element={
+          <ProtectedRoute>
+            <GalleryPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/album"
+        element={
+          <ProtectedRoute>
+            <AlbumsPage />
           </ProtectedRoute>
         }
       />

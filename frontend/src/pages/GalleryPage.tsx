@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-
+import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/axios";
-
 import GalleryHeader from "../components/gallery/GalleryHeader";
 import GalleryGrid from "../components/gallery/GalleryGrid";
 import GalleryModal from "../components/gallery/GalleryModal";
@@ -9,28 +8,48 @@ import GalleryUploadModal from "../components/gallery/GalleryUploadModal";
 
 import type { GalleryItem } from "../types/gallery";
 import TopBar from "../components/layout/TopBar";
+import GalleryUploadModalMultiple from "../components/gallery/GalleryUploadModalMultiple";
 
 export default function GalleryPage() {
+
+  const { id } = useParams();
+  
+  const navigate = useNavigate();
 
   const [darkMode, setDarkMode] = useState(true);
 
   const [gallery, setGallery] = useState<GalleryItem[]>([]);
 
-  const [selected, setSelected] =
-    useState<GalleryItem | null>(null);
+  const [selected, setSelected] = useState<GalleryItem | null>(null);
 
-  const [showUpload, setShowUpload] =
-    useState(false);
+  const [selectedIndex, setSelectedIndex] =
+  useState<number | null>(null);
+
+  const [showUpload, setShowUpload] = useState(false);
+
+  const [showUploadM, setShowUploadM] = useState(false);
 
   const [loading, setLoading] = useState(true);
+
+  const [albums, setAlbums] = useState([]);
+
+  const load = async () => {
+    const res = await api.get("/albums/");
+    setAlbums(res.data);
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
 
   /* LOAD GALLERY */
   const loadGallery = async () => {
     try {
-      const res = await api.get("/gallery/gallery/");
-
+      const url = id
+      ? `/gallery/gallery/?album=${id}`
+      : "/gallery/gallery/";
+      const res = await api.get(url);
       setGallery(res.data);
-
     } catch (err) {
       console.error(err);
     } finally {
@@ -64,7 +83,16 @@ export default function GalleryPage() {
         />
       )}
 
-      <div    className="max-w-7xl mx-auto px-4 py-10">
+      {showUploadM && (
+        <GalleryUploadModalMultiple
+          darkMode={darkMode}
+          albums={albums}
+          onClose={() => setShowUploadM(false)}
+          onUploaded={loadGallery}
+        />
+      )}
+
+      <div className="max-w-7xl mx-auto px-4 py-10">
 
 
         {/* ACTIONS */}
@@ -78,11 +106,25 @@ export default function GalleryPage() {
           </button>
 
           <button
+            onClick={() => setShowUploadM(true)}
+            className="px-5 py-2.5 rounded-2xl bg-green-600 hover:bg-green-500 text-white transition"
+          >
+            Upload Photo Many
+          </button>
+
+          <button
+            onClick={() => navigate(`/album/`)}
+            className="px-5 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white transition"
+          >
+            Album
+          </button>
+
+          {/* <button
             onClick={() => setDarkMode(!darkMode)}
             className="px-5 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white transition"
           >
             {darkMode ? "Light Mode" : "Dark Mode"}
-          </button>
+          </button> */}
 
         </div>
 
@@ -94,20 +136,35 @@ export default function GalleryPage() {
 
           </div>
         ) : (
+          // <GalleryGrid
+          //   items={gallery}
+          //   darkMode={darkMode}
+          //   onSelect={setSelected}
+          // />
           <GalleryGrid
             items={gallery}
             darkMode={darkMode}
-            onSelect={setSelected}
+            onSelect={(item) => {
+              const index = gallery.findIndex(
+                (g) => g.id === item.id
+              );
+
+              setSelectedIndex(index);
+            }}
           />
         )}
 
       </div>
 
       {/* IMAGE MODAL */}
-      <GalleryModal
-        item={selected}
-        onClose={() => setSelected(null)}
-      />
+      {selectedIndex !== null && (
+        <GalleryModal
+          items={gallery}
+          index={selectedIndex}
+          setIndex={setSelectedIndex}
+          onClose={() => setSelectedIndex(null)}
+        />
+      )}
 
     </div>
   );
