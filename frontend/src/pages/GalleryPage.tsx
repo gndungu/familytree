@@ -9,12 +9,17 @@ import GalleryUploadModal from "../components/gallery/GalleryUploadModal";
 import type { GalleryItem } from "../types/gallery";
 import TopBar from "../components/layout/TopBar";
 import GalleryUploadModalMultiple from "../components/gallery/GalleryUploadModalMultiple";
+import ConfirmDialog from "../components/gallery/ConfirmDialog";
 
 export default function GalleryPage() {
 
   const { id } = useParams();
   
   const navigate = useNavigate();
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const [darkMode, setDarkMode] = useState(true);
 
@@ -33,8 +38,31 @@ export default function GalleryPage() {
 
   const [albums, setAlbums] = useState([]);
 
+  const requestDelete = (id: number) => {
+    setDeleteId(id);
+    setConfirmOpen(true);
+  };
+
+  const deleteImage = async () => {
+    if (!deleteId) return;
+
+    try {
+      await api.delete(`/gallery/gallery/${deleteId}/`);
+
+      setGallery((prev) =>
+        prev.filter((img) => img.id !== deleteId)
+      );
+
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setConfirmOpen(false);
+      setDeleteId(null);
+    }
+  };
+
   const load = async () => {
-    const res = await api.get("/albums/");
+    const res = await api.get("/gallery/albums/");
     setAlbums(res.data);
   };
 
@@ -78,6 +106,7 @@ export default function GalleryPage() {
       {showUpload && (
         <GalleryUploadModal
           darkMode={darkMode}
+          albums={albums}
           onClose={() => setShowUpload(false)}
           onUploaded={loadGallery}
         />
@@ -105,12 +134,12 @@ export default function GalleryPage() {
             Upload Photo
           </button>
 
-          <button
+          {/* <button
             onClick={() => setShowUploadM(true)}
             className="px-5 py-2.5 rounded-2xl bg-green-600 hover:bg-green-500 text-white transition"
           >
             Upload Photo Many
-          </button>
+          </button> */}
 
           <button
             onClick={() => navigate(`/album/`)}
@@ -151,6 +180,7 @@ export default function GalleryPage() {
 
               setSelectedIndex(index);
             }}
+            onDelete={requestDelete}
           />
         )}
 
@@ -165,6 +195,18 @@ export default function GalleryPage() {
           onClose={() => setSelectedIndex(null)}
         />
       )}
+
+      <ConfirmDialog
+        open={confirmOpen}
+        darkMode={darkMode}
+        title="Delete Image"
+        message="This action cannot be undone. Do you want to continue?"
+        onCancel={() => {
+          setConfirmOpen(false);
+          setDeleteId(null);
+        }}
+        onConfirm={deleteImage}
+      />
 
     </div>
   );

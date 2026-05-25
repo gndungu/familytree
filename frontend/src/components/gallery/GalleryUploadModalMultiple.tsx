@@ -1,5 +1,6 @@
 import { useState } from "react";
 import api from "../../api/axios";
+import CreateAlbumModal from "../../pages/CreateAlbumModal";
 
 interface Props {
   darkMode: boolean;
@@ -14,7 +15,7 @@ export default function GalleryUploadModalMultiple({
   onClose,
   onUploaded,
 }: Props) {
-
+  const [showAlbumModal, setShowAlbumModal] = useState(false);
   const [album, setAlbum] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
@@ -52,6 +53,17 @@ export default function GalleryUploadModalMultiple({
   return (
     <div className="fixed z-50 inset-0 bg-black/70 flex items-center justify-center p-4">
 
+      {showAlbumModal && (
+        <CreateAlbumModal
+          darkMode={darkMode}
+          onClose={() => setShowAlbumModal(false)}
+          onCreated={() => {
+            setShowAlbumModal(false);
+            // optionally refresh albums list
+          }}
+        />
+      )}
+
       <div className={`w-full max-w-xl p-6 rounded-2xl ${
         darkMode ? "bg-slate-900 text-white" : "bg-white"
       }`}>
@@ -63,15 +75,29 @@ export default function GalleryUploadModalMultiple({
         {/* ALBUM SELECT */}
         <select
           value={album}
-          onChange={(e) => setAlbum(e.target.value)}
+          onChange={(e) => {
+            const value = e.target.value;
+
+            if (value === "__create__") {
+              setShowAlbumModal(true);
+              return;
+            }
+
+            setAlbum(value);
+          }}
           className="w-full p-3 rounded-xl bg-slate-800 mb-4"
         >
           <option value="">Select Album</option>
+
           {albums.map((a) => (
             <option key={a.id} value={a.id}>
               {a.title}
             </option>
           ))}
+
+          <option value="__create__">
+            + Create new album
+          </option>
         </select>
 
         {/* FILE INPUT */}

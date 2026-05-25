@@ -1,44 +1,68 @@
-import { useState } from "react";
+import { useRef, useState, useMemo } from "react";
 import api from "../../api/axios";
+import CreateAlbumModal from "../../pages/CreateAlbumModal";
 
 interface Props {
   darkMode: boolean;
+  albums: any[];
   onClose: () => void;
   onUploaded: () => void;
+  onRefreshAlbums?: () => void;
 }
 
 export default function GalleryUploadModal({
   darkMode,
+  albums,
   onClose,
   onUploaded,
+  onRefreshAlbums,
 }: Props) {
-  const [title, setTitle] = useState("");
 
-  const [description, setDescription] = useState("");
+  const [album, setAlbum] = useState("");
+  const [albumOpen, setAlbumOpen] = useState(false);
+  const [albumQuery, setAlbumQuery] = useState("");
 
-  const [eventDate, setEventDate] = useState("");
-
-  const [image, setImage] = useState<File | null>(null);
-
-  const [preview, setPreview] = useState("");
-
+  const [images, setImages] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const handleImage = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = e.target.files?.[0];
+  const [showAlbumModal, setShowAlbumModal] = useState(false);
 
-    if (!file) return;
+  const fileRef = useRef<HTMLInputElement | null>(null);
 
-    setImage(file);
+  // -------------------------
+  // FILTER ALBUMS (SEARCH)
+  // -------------------------
+  const filteredAlbums = useMemo(() => {
+    return albums.filter((a) =>
+      a.title.toLowerCase().includes(albumQuery.toLowerCase())
+    );
+  }, [albums, albumQuery]);
 
-    setPreview(URL.createObjectURL(file));
+  const selectedAlbum = albums.find((a) => a.id.toString() === album);
+
+  // -------------------------
+  // FILE HANDLING
+  // -------------------------
+  const handleFiles = (files: FileList | null) => {
+    if (!files) return;
+    setImages((prev) => [...prev, ...Array.from(files)]);
   };
 
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    handleFiles(e.dataTransfer.files);
+  };
+
+  const removeImage = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // -------------------------
+  // SUBMIT
+  // -------------------------
   const submit = async () => {
-    if (!title || !image) {
-      alert("Title and image required");
+    if (images.length === 0) {
+      alert("Select images first");
       return;
     }
 
@@ -47,23 +71,25 @@ export default function GalleryUploadModal({
 
       const formData = new FormData();
 
-      formData.append("title", title);
-      formData.append("description", description);
-      formData.append("event_date", eventDate);
-      formData.append("image", image);
+      if (album) {
+        formData.append("album", album);
+      }
 
-      await api.post("/gallery/gallery/", formData, {
+      images.forEach((img) => {
+        formData.append("images", img);
+      });
+
+      await api.post("/gallery/gallerym/", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
 
       onUploaded();
-
       onClose();
 
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error(err.response?.data || err);
       alert("Upload failed");
     } finally {
       setLoading(false);
@@ -71,143 +97,136 @@ export default function GalleryUploadModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
 
-      <div
-        className={`w-full max-w-xl rounded-3xl border shadow-2xl p-6 ${
-          darkMode
-            ? "bg-slate-900 border-white/10 text-white"
-            : "bg-white border-slate-200 text-slate-900"
-        }`}
-      >
+      <div className={`w-full max-w-2xl p-6 rounded-2xl ${
+        darkMode ? "bg-slate-900 text-white" : "bg-white"
+      }`}>
 
-        <div className="flex items-center justify-between mb-6">
+        {/* TITLE */}
+        <h2 className="text-xl font-bold text-indigo-400 mb-4">
+          Upload Photos
+        </h2>
 
-          <h2 className="text-2xl font-bold text-indigo-400">
-            Upload Memory
-          </h2>
+        {/* -------------------------
+            ALBUM DROPDOWN
+        ------------------------- */}
+        <div className="relative mb-4">
 
-          <button
-            onClick={onClose}
-            className="text-xl"
+          <div
+            onClick={() => setAlbumOpen(!albumOpen)}
+            className={`p-3 rounded-xl border cursor-pointer ${
+              darkMode
+                ? "bg-slate-800 border-slate-700"
+                : "bg-white border-slate-300"
+            }`}
           >
-            ✕
-          </button>
-        </div>
+            {selectedAlbum ? selectedAlbum.name : "Select Album"}
+          </div>
 
-        {/* IMAGE PREVIEW */}
-        <div className="mb-5">
+          {albumOpen && (
+            <div className={`absolute z-50 w-full mt-2 rounded-xl border max-h-64 overflow-auto ${
+              darkMode
+                ? "bg-slate-900 border-slate-700"
+                : "bg-white border-slate-300"
+            }`}>
 
-          {preview ? (
-            <img
-              src={preview}
-              className="w-full h-64 object-cover rounded-2xl border border-white/10"
-            />
-          ) : (
-            <div
-              className={`h-64 rounded-2xl border-2 border-dashed flex items-center justify-center ${
-                darkMode
-                  ? "border-white/10 bg-slate-800"
-                  : "border-slate-300 bg-slate-100"
-              }`}
-            >
-              <span className="text-slate-400">
-                Image Preview
-              </span>
+              {/* SEARCH */}
+              <input
+                value={albumQuery}
+                onChange={(e) => setAlbumQuery(e.target.value)}
+                placeholder="Search album..."
+                className="w-full p-3 border-b outline-none bg-transparent"
+              />
+
+              {/* CREATE NEW */}
+              <div
+                onClick={() => {
+                  setShowAlbumModal(true);
+                  setAlbumOpen(false);
+                }}
+                className="p-3 text-indigo-400 cursor-pointer hover:bg-slate-700"
+              >
+                + Create new album
+              </div>
+
+              {/* LIST */}
+              {filteredAlbums.length === 0 ? (
+                <div className="p-3 text-slate-400">
+                  No albums found
+                </div>
+              ) : (
+                filteredAlbums.map((a) => (
+                  <div
+                    key={a.id}
+                    onClick={() => {
+                      setAlbum(a.id.toString());
+                      setAlbumOpen(false);
+                      setAlbumQuery("");
+                    }}
+                    className="p-3 cursor-pointer hover:bg-slate-700"
+                  >
+                    {a.title}
+                  </div>
+                ))
+              )}
+
             </div>
           )}
         </div>
 
-        {/* FILE INPUT */}
-        <label
-          className={`mb-4 flex items-center justify-center h-14 rounded-2xl border-2 border-dashed cursor-pointer transition ${
+        {/* -------------------------
+            DRAG & DROP
+        ------------------------- */}
+        <div
+          onDrop={handleDrop}
+          onDragOver={(e) => e.preventDefault()}
+          onClick={() => fileRef.current?.click()}
+          className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer mb-4 ${
             darkMode
-              ? "border-indigo-500/30 hover:border-indigo-500 bg-slate-800"
-              : "border-indigo-300 hover:border-indigo-500 bg-slate-50"
+              ? "border-slate-700 bg-slate-800"
+              : "border-slate-300 bg-slate-50"
           }`}
         >
-          <span className="text-sm font-medium">
-            Select Image
-          </span>
+          Drag & drop images or click to select
 
           <input
+            ref={fileRef}
             type="file"
+            multiple
             accept="image/*"
-            onChange={handleImage}
             className="hidden"
-          />
-        </label>
-
-        {/* TITLE */}
-        <div className="mb-4">
-          <label className="text-sm text-slate-400">
-            Title
-          </label>
-
-          <input
-            type="text"
-            value={title}
-            onChange={(e) =>
-              setTitle(e.target.value)
-            }
-            className={`mt-2 w-full px-4 py-3 rounded-2xl border outline-none ${
-              darkMode
-                ? "bg-slate-800 border-white/10"
-                : "bg-slate-50 border-slate-200"
-            }`}
+            onChange={(e) => handleFiles(e.target.files)}
           />
         </div>
 
-        {/* DESCRIPTION */}
-        <div className="mb-4">
-          <label className="text-sm text-slate-400">
-            Description
-          </label>
-
-          <textarea
-            value={description}
-            onChange={(e) =>
-              setDescription(e.target.value)
-            }
-            rows={4}
-            className={`mt-2 w-full px-4 py-3 rounded-2xl border outline-none ${
-              darkMode
-                ? "bg-slate-800 border-white/10"
-                : "bg-slate-50 border-slate-200"
-            }`}
-          />
-        </div>
-
-        {/* EVENT DATE */}
-        <div className="mb-6">
-          <label className="text-sm text-slate-400">
-            Event Date
-          </label>
-
-          <input
-            type="date"
-            value={eventDate}
-            onChange={(e) =>
-              setEventDate(e.target.value)
-            }
-            className={`mt-2 w-full px-4 py-3 rounded-2xl border outline-none ${
-              darkMode
-                ? "bg-slate-800 border-white/10"
-                : "bg-slate-50 border-slate-200"
-            }`}
-          />
-        </div>
+        {/* -------------------------
+            PREVIEW
+        ------------------------- */}
+        {images.length > 0 && (
+          <div className="grid grid-cols-3 gap-3 mb-4 max-h-60 overflow-auto">
+            {images.map((img, i) => (
+              <div key={i} className="relative">
+                <img
+                  src={URL.createObjectURL(img)}
+                  className="w-full h-24 object-cover rounded-xl"
+                />
+                <button
+                  onClick={() => removeImage(i)}
+                  className="absolute top-1 right-1 bg-red-600 text-white text-xs px-2 rounded"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* ACTIONS */}
         <div className="flex gap-3">
-
           <button
             onClick={onClose}
-            className={`flex-1 py-3 rounded-2xl ${
-              darkMode
-                ? "bg-slate-800 hover:bg-slate-700"
-                : "bg-slate-200 hover:bg-slate-300"
-            }`}
+            className="flex-1 p-3 bg-slate-700 rounded-xl"
           >
             Cancel
           </button>
@@ -215,15 +234,27 @@ export default function GalleryUploadModal({
           <button
             onClick={submit}
             disabled={loading}
-            className="flex-1 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white"
+            className="flex-1 p-3 bg-indigo-600 text-white rounded-xl"
           >
-            {loading
-              ? "Uploading..."
-              : "Upload"}
+            {loading ? "Uploading..." : "Upload"}
           </button>
-
         </div>
+
       </div>
+
+      {/* CREATE ALBUM MODAL */}
+      {showAlbumModal && (
+        <CreateAlbumModal
+          darkMode={darkMode}
+          onClose={() => setShowAlbumModal(false)}
+          onCreated={(newAlbum) => {
+            setShowAlbumModal(false);
+            setAlbum(newAlbum.id.toString());
+            onRefreshAlbums?.();
+          }}
+        />
+      )}
+
     </div>
   );
 }

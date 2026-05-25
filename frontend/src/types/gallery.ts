@@ -2,7 +2,7 @@ export interface GalleryItem {
   id: number;
   title: string;
   description?: string;
-  image: string;
+  image_url: string;
   event_date?: string;
   created_at: string;
 }
