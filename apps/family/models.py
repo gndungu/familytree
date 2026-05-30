@@ -165,5 +165,17 @@ class FamilyMember(TimeStampMixin):
         default=True
     )
 
+    def save(self, *args, **kwargs):
+        if self.first_name:
+            self.first_name = self.first_name.strip().title()
+
+        if self.middle_name:
+            self.middle_name = self.middle_name.strip().title()
+
+        if self.last_name:
+            self.last_name = self.last_name.strip().title()
+
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.first_name} {self.last_name or ''}"

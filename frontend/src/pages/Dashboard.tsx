@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import TopBar from "../components/layout/TopBar";
 import StatCard from "../components/dashboard/StatCard";
-import SelectedPersonCard from "../components/dashboard/SelectedPersonCard";
 import QuickActions from "../components/dashboard/QuickActions";
 import ActivityFeed from "../components/dashboard/ActivityFeed";
 import TreePanel from "../components/dashboard/TreePanel";

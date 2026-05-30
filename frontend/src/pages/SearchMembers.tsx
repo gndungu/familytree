@@ -92,16 +92,25 @@ export default function SearchMembers() {
       <div className="max-w-7xl mx-auto p-6">
 
         {/* SEARCH BAR */}
-        <div
+       <div
           className={`p-4 rounded-3xl border backdrop-blur-xl mb-6 ${card}`}
         >
-          <input
-            type="text"
-            placeholder="Search by name, phone, occupation..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className={`w-full px-5 py-4 rounded-2xl border outline-none ${input}`}
-          />
+          <div className="flex gap-3">
+            <input
+              type="text"
+              placeholder="Search by name, phone, occupation..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className={`flex-1 px-5 py-4 rounded-2xl border outline-none ${input}`}
+            />
+
+            <button
+              onClick={() => navigate("/member/create/")}
+              className="px-6 py-4 rounded-2xl bg-blue-600 text-white font-medium hover:bg-blue-700 transition"
+            >
+              + Add
+            </button>
+          </div>
         </div>
 
         {/* RESULTS */}
